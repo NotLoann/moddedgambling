@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="image.webp" type="image/webp">
+    <title>Modded Gambling - Ta Chance Quotidienne</title>
+    <style>
+        /* Variables pour les couleurs */
+        :root {
+            --primary-color: #FF8C00; /* Orange vif */
+            --secondary-color: #FFA500; /* Orange plus clair pour les accents */
+            --background-dark: #1a1a1a; /* Noir très foncé */
+            --text-light: #f0f0f0; /* Texte clair */
+            --border-color: #333; /* Gris foncé pour les bordures */
+            --button-hover: #e07b00; /* Orange plus foncé au survol */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-dark);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Pour éviter les barres de défilement si des animations débordent */
+            position: relative; /* Nécessaire pour positionner le bouton code */
+        }
+
+        .container {
+            background-color: #2a2a2a; /* Un gris-noir légèrement plus clair pour le conteneur */
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 25px; /* Encore réduit le padding */
+            text-align: center;
+            width: 90%;
+            max-width: 380px; /* Largeur max encore plus réduite */
+            border: 2px solid var(--border-color);
+            animation: fadeIn 1s ease-out;
+            display: none; /* MASQUÉ PAR DÉFAUT */
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2em; /* Taille encore réduite */
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px rgba(255, 140, 0, 0.5);
+        }
+
+        .description-text {
+            font-size: 0.9em; /* Taille réduite */
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            font-size: 1.5em; /* Taille réduite */
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 0.95em; /* Taille réduite */
+            line-height: 1.5;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Espace réduit entre les boutons */
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px; /* Padding réduit */
+            border: none;
+            border-radius: 8px;
+            font-size: 1em; /* Taille réduite */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-button {
+            background-color: var(--primary-color);
+            color: var(--background-dark);
+            box-shadow: 0 4px 12px rgba(255, 140, 0, 0.4);
+        }
+
+        .main-button:hover:not(:disabled) {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 140, 0, 0.6);
+        }
+
+        .secondary-button {
+            background-color: #444;
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .secondary-button:hover:not(:disabled) {
+            background-color: #555;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.6;
+            box-shadow: none;
+        }
+
+        /* Bouton "CODES" positionné en bas à gauche */
+        #showCodesButton {
+            position: absolute;
+            bottom: 20px; /* Distance du bas */
+            left: 20px; /* Distance de la gauche */
+            padding: 10px 15px; /* Padding ajusté pour un bouton plus petit */
+            font-size: 0.9em; /* Taille de police réduite */
+            background-color: #6a0dad; /* Une couleur distincte, violet par exemple */
+            color: var(--text-light);
+            border: 1px solid #8a2be2;
+            box-shadow: 0 3px 10px rgba(106, 13, 173, 0.5);
+            z-index: 10; /* Pour qu'il soit au-dessus de tout */
+            transform: none; /* Annule la translation du hover pour ce bouton spécifique s'il est hors du groupe */
+            display: none; /* MASQUÉ PAR DÉFAUT */
+        }
+
+        #showCodesButton:hover:not(:disabled) {
+            background-color: #8a2be2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(106, 13, 173, 0.7);
+        }
+
+        /* Styles pour les zones de résultat et de compte à rebours */
+        .result-area, .cooldown-area {
+            margin-top: 15px; /* Marge réduite */
+            padding: 12px; /* Padding réduit */
+            background-color: #333;
+            border-radius: 8px; /* Rayon réduit */
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 7px rgba(0, 0, 0, 0.3);
+        }
+
+        .gain-display {
+            font-size: 1.2em; /* Taille réduite */
+            font-weight: bold;
+            color: var(--secondary-color);
+            text-shadow: 0 0 6px rgba(255, 165, 0, 0.7);
+        }
+
+        .countdown-timer {
+            font-size: 1.1em; /* Taille réduite */
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Animation d'apparition du conteneur */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Animation de défilement du texte */
+        .animation-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px; /* Marge réduite */
+            height: 70px; /* Hauteur fixe réduite pour l'animation */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .rolling-text-container {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.1s linear;
+        }
+
+        .rolling-text-item {
+            font-size: 1.2em; /* Taille du texte qui défile réduite */
+            font-weight: bold;
+            color: var(--secondary-color);
+            padding: 4px 0; /* Padding réduit */
+            opacity: 0.3;
+            transition: opacity 0.1s ease-out;
+        }
+        .rolling-text-item.highlighted {
+            opacity: 1;
+            color: var(--primary-color);
+            transform: scale(1.08); /* Effet d'échelle légèrement réduit */
+        }
+
+        .animation-text {
+            margin-top: 12px; /* Marge réduite */
+            font-size: 1em; /* Taille réduite */
+            color: #bbb;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.7; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1.02); }
+        }
+
+        /* Styles des fenêtres modales (historique, codes, et pseudo) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Fond noir semi-transparent */
+            display: flex; /* Utilise flexbox pour centrer le contenu */
+            justify-content: center;
+            align-items: center;
+            z-index: 998; /* Moins que la modal elle-même */
+            opacity: 0; /* Caché par défaut */
+            visibility: hidden; /* Caché par défaut */
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .rewards-history-area, .codes-area, .pseudo-input-area { /* Ajout de .pseudo-input-area */
+            background-color: #2a2a2a; /* Même fond que le container principal */
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            padding: 20px; /* Padding réduit */
+            width: 90%;
+            max-width: 350px; /* Largeur réduite */
+            max-height: 65vh; /* Hauteur réduite */
+            overflow-y: auto;
+            border: 2px solid var(--border-color);
+            display: none; /* Toujours caché par défaut, géré par JS */
+        }
+
+        .rewards-history-area.active, .codes-area.active, .pseudo-input-area.active { /* Ajout de .pseudo-input-area.active */
+            display: block; /* Affiche la modal */
+            animation: scaleIn 0.3s ease-out; /* Lance l'animation d'apparition */
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .rewards-history-area h2, .codes-area h2, .pseudo-input-area h2 { /* Ajout de .pseudo-input-area h2 */
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        #rewardsList {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+            max-height: 220px; /* Hauteur max pour la liste réduite */
+            overflow-y: auto;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 8px; /* Padding réduit */
+            background-color: #222;
+        }
+
+        #rewardsList li {
+            padding: 6px 0; /* Padding réduit */
+            border-bottom: 1px dashed #444;
+            font-size: 0.95em; /* Taille réduite */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #rewardsList li:last-child {
+            border-bottom: none;
+        }
+
+        .reward-date {
+            font-size: 0.7em; /* Taille réduite */
+            color: #aaa;
+        }
+
+        #closeRewardsButton, #closeCodesButton, #savePseudoButton { /* Ajout de #savePseudoButton */
+            margin-top: 18px; /* Marge réduite */
+            width: 100%;
+        }
+
+        /* Styles spécifiques aux codes et pseudo input */
+        .codes-area input[type="text"], .pseudo-input-area input[type="text"] { /* Ajout de .pseudo-input-area input[type="text"] */
+            width: calc(100% - 20px);
+            padding: 9px; /* Padding réduit */
+            margin-bottom: 12px; /* Marge réduite */
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: #444;
+            color: var(--text-light);
+            font-size: 0.95em; /* Taille réduite */
+            text-align: center;
+        }
+
+        .codes-area button, .pseudo-input-area button { /* Ajout de .pseudo-input-area button */
+            width: 100%;
+            margin-top: 0;
+        }
+
+        .codes-area #codeMessage, .pseudo-input-area #pseudoMessage { /* Ajout de .pseudo-input-area #pseudoMessage */
+            margin-top: 8px; /* Marge réduite */
+            font-size: 0.85em; /* Taille réduite */
+            color: var(--secondary-color);
+            min-height: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <h1>Modded Gambling</h1>
+
+        <p class="description-text">
+            Clique sur le bouton "Gamble" pour tenter ta chance !
+            Reviens chaque jour pour une nouvelle opportunité !
+        </p>
+
+        <p id="message"></p>
+
+        <div class="button-group">
+            <button id="gambleButton" class="main-button">GAMBLE</button>
+            <button id="showRewardsButton" class="secondary-button">MES RÉCOMPENSES</button>
+        </div>
+
+        <div id="animationContainer" class="animation-area" style="display: none;">
+            <div id="rollingTextContainer" class="rolling-text-container">
+                </div>
+            <p class="animation-text">LET'S GO GAMBLING!!!</p>
+        </div>
+
+        <div id="result" class="result-area" style="display: none;">
+            <h2>Félicitations, tu as gagné :</h2>
+            <p id="gainText" class="gain-display"></p>
+        </div>
+
+        <div id="cooldown" class="cooldown-area" style="display: none;">
+            <p>Prochaine tentative dans : <span id="countdown" class="countdown-timer"></span></p>
+        </div>
+
+    </div>
+
+    <button id="showCodesButton" class="secondary-button">CODES</button>
+
+    <div id="modalOverlay" class="modal-overlay">
+        <div id="pseudoInputArea" class="pseudo-input-area">
+            <h2>Modded Gambling.</h2>
+            <p>Entrez votre pseudo Minecraft afin d'accéder au site et de jouer !</p>
+            <input type="text" id="pseudoInput" placeholder="PSEUDO MC" maxlength="20" />
+            <p id="pseudoMessage" style="color: red;"></p>
+            <p><a href="https://www.youtube.com/watch?v=fS7uTxARYTU" target="_blank" style="color: var(--primary-color); text-decoration: underline;">Conditions de jeu</a></p>
+            <button id="savePseudoButton" class="main-button">CONFIRMER ET ACCEPTER LES CONDITIONS</button>
+        </div>
+
+        <div id="rewardsHistory" class="rewards-history-area">
+            <h2>TES RECOMPENSES :</h2>
+            <ul id="rewardsList">
+                </ul>
+            <button id="closeRewardsButton" class="secondary-button">FERMER</button>
+        </div>
+
+        <div id="codesArea" class="codes-area">
+            <h2>Entrer un code :</h2>
+            <input type="text" id="codeInput" placeholder="Saisis ton code ici..." />
+            <p id="codeMessage"></p>
+            <button id="activateCodeButton" class="main-button">ACTIVER LE CODE</button>
+            <button id="closeCodesButton" class="secondary-button">FERMER</button>
+        </div>
+    </div>
+
+    <script>
+        const gambleButton = document.getElementById('gambleButton');
+        const showRewardsButton = document.getElementById('showRewardsButton');
+        const showCodesButton = document.getElementById('showCodesButton');
+        const closeRewardsButton = document.getElementById('closeRewardsButton');
+        const closeCodesButton = document.getElementById('closeCodesButton');
+        const activateCodeButton = document.getElementById('activateCodeButton');
+        const codeInput = document.getElementById('codeInput');
+        const codeMessage = document.getElementById('codeMessage');
+
+        const messageElement = document.getElementById('message');
+        const animationContainer = document.getElementById('animationContainer');
+        const rollingTextContainer = document.getElementById('rollingTextContainer');
+        const resultContainer = document.getElementById('result');
+        const gainTextElement = document.getElementById('gainText');
+        const cooldownContainer = document.getElementById('cooldown');
+        const countdownElement = document.getElementById('countdown');
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const rewardsHistoryContainer = document.getElementById('rewardsHistory');
+        const rewardsListElement = document.getElementById('rewardsList');
+        const codesArea = document.getElementById('codesArea');
+        const mainContainer = document.getElementById('mainContainer');
+
+        const pseudoInputArea = document.getElementById('pseudoInputArea');
+        const pseudoInput = document.getElementById('pseudoInput');
+        const savePseudoButton = document.getElementById('savePseudoButton');
+        const pseudoMessage = document.getElementById('pseudoMessage');
+
+        let playerName = '';
+
+        const COOLDOWN_HOURS = 24;
+        const ANIMATION_DURATION = 3000;
+
+        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1388541072677802085/Y1ojvTBmgmZdjbtrhbcRnVnZgbySldprTJjxfKLBRJVFNJt9lwV86ZuuqMNBpeO8rqjh"; 
+        
+        const prizes = [
+            "Lingot de Terrasteel x3",
+            "Lingot de Terrasteel x5",
+            "Nether Star x5",
+            "Rien du tout ptdrr",
+            "Je sais pas j'ai pas d'inspi (t'as rien eu)",
+            "Wyvern Core x1",,
+            "Nixu femboy (t'as gagné 1 rose)",
+            "1 item aléatoire botania",
+            "1 item aléatoire MODPACK !",
+            "Wyvern Core x5",
+            "Nether Star x32",
+            "Date organisé avec Bifurlo dans une chapelle sur Minecraft Moddé (pourquoi)",
+            "Bifurlo costplay femboy",
+            "Wyvern Core x2",
+            "Tu peux /kill Loann",
+            "T'as rien mais jtm gros",
+            "Item aléatoire modpack edition 2",
+            "Sextape Bifurlo x c4tie (je leak)",
+            "Ta propre tête",
+            "un disque de musique random",
+            "Leak ip bifurlo"
+        ];
+
+        // Nouvelle fonction : Récupérer la liste des codes déjà utilisés
+        function getUsedCodes() {
+            const usedCodes = JSON.parse(localStorage.getItem('usedCodes')) || [];
+            return usedCodes;
+        }
+
+        // Nouvelle fonction : Ajouter un code à la liste des codes utilisés
+        function addUsedCode(code) {
+            const usedCodes = getUsedCodes();
+            usedCodes.push(code);
+            localStorage.setItem('usedCodes', JSON.stringify(usedCodes));
+        }
+
+        const availableCodes = {
+            "ABC123.RESETCD": {
+                action: () => {
+                    localStorage.setItem('lastGambleTime', '0');
+                    updateCountdown();
+                    return "Cooldown réinitialisé ! Tu peux rejouer immédiatement.";
+                },
+            },
+            // Codes modifiés pour réinitialiser le cooldown
+            "NIXU": {
+                action: () => {
+                    localStorage.setItem('lastGambleTime', '0');
+                    updateCountdown();
+                    return "Code 'NIXU' activé ! Ton cooldown a été réinitialisé.";
+                }
+            },
+            "BIFURLO": {
+                action: () => {
+                    localStorage.setItem('lastGambleTime', '0');
+                    updateCountdown();
+                    return "Code 'BIFURLO' activé ! Ton cooldown a été réinitialisé.";
+                }
+            },
+            "LINOFEMBOY": {
+                action: () => {
+                    localStorage.setItem('lastGambleTime', '0');
+                    updateCountdown();
+                    return "Un jour Lino tu le seras...";
+                }
+            }
+        };
+
+        function setLastGambleTime(time = Date.now()) {
+            localStorage.setItem('lastGambleTime', time);
+        }
+
+        function getLastGambleTime() {
+            return parseInt(localStorage.getItem('lastGambleTime') || '0');
+        }
+
+        function calculateRemainingTime() {
+            const lastGamble = getLastGambleTime();
+            const now = Date.now();
+            const cooldownMillis = COOLDOWN_HOURS * 60 * 60 * 1000;
+            const timeElapsed = now - lastGamble;
+            const timeLeft = cooldownMillis - timeElapsed;
+            return timeLeft > 0 ? timeLeft : 0;
+        }
+
+        function updateCountdown() {
+            const timeLeft = calculateRemainingTime();
+
+            if (timeLeft === 0) {
+                gambleButton.disabled = false;
+                messageElement.textContent = `Bienvenue, ${playerName} ! Clique pour ta récompense du jour !`;
+                cooldownContainer.style.display = 'none';
+            } else {
+                gambleButton.disabled = true;
+                cooldownContainer.style.display = 'block';
+
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                countdownElement.textContent = `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+                messageElement.textContent = `Salut ${playerName}, le portail des récompenses est scellé pour le moment...`;
+            }
+        }
+
+        function getRewardsHistory() {
+            const history = JSON.parse(localStorage.getItem('rewardsHistory')) || [];
+            return history;
+        }
+
+        function addRewardToHistory(reward) {
+            const history = getRewardsHistory();
+            const now = new Date();
+            const dateString = now.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            history.unshift({ prize: reward, date: dateString });
+            localStorage.setItem('rewardsHistory', JSON.stringify(history));
+        }
+
+        async function sendDiscordWebhook(message) {
+            if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL === "YOUR_DISCORD_WEBHOOK_URL") {
+                console.warn("URL de webhook Discord non configurée. Le message ne sera pas envoyé.");
+                return;
+            }
+            try {
+                const response = await fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: message
+                    }),
+                });
+
+                if (!response.ok) {
+                    console.error(`Erreur lors de l'envoi du webhook: ${response.status} ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error("Erreur de réseau lors de l'envoi du webhook:", error);
+            }
+        }
+
+        function displayRewardsHistory() {
+            rewardsListElement.innerHTML = '';
+            const history = getRewardsHistory();
+
+            if (history.length === 0) {
+                rewardsListElement.innerHTML = '<li>Aucune récompense gagnée pour le moment. Tente ta chance !</li>';
+            } else {
+                history.forEach(item => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        <span>${item.prize}</span>
+                        <span class="reward-date">${item.date}</span>
+                    `;
+                    rewardsListElement.appendChild(listItem);
+                });
+            }
+            modalOverlay.classList.add('active');
+            rewardsHistoryContainer.classList.add('active');
+            codesArea.classList.remove('active');
+            pseudoInputArea.classList.remove('active');
+        }
+
+        function startRollingAnimation(finalPrize) {
+            rollingTextContainer.innerHTML = '';
+
+            const extendedPrizes = [...prizes, ...prizes, ...prizes, ...prizes, finalPrize, ...prizes.slice(0, 5)];
+
+            extendedPrizes.forEach(p => {
+                const item = document.createElement('div');
+                item.classList.add('rolling-text-item');
+                item.textContent = p;
+                rollingTextContainer.appendChild(item);
+            });
+
+            const itemHeight = rollingTextContainer.children[0].offsetHeight;
+            const targetIndex = extendedPrizes.indexOf(finalPrize, prizes.length * 4);
+            const targetScrollPos = targetIndex * itemHeight - (animationContainer.offsetHeight / 2) + (itemHeight / 2);
+
+            let startTime = null;
+            function animateRoll(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const progress = timestamp - startTime;
+
+                if (progress < ANIMATION_DURATION) {
+                    const easeOutProgress = 1 - Math.pow(1 - (progress / ANIMATION_DURATION), 3);
+                    const currentScrollPos = easeOutProgress * targetScrollPos;
+
+                    rollingTextContainer.style.transform = `translateY(-${currentScrollPos}px)`;
+
+                    const centerIndex = Math.floor((currentScrollPos + animationContainer.offsetHeight / 2) / itemHeight);
+                    Array.from(rollingTextContainer.children).forEach((item, index) => {
+                        if (index === centerIndex) {
+                            item.classList.add('highlighted');
+                        } else {
+                            item.classList.remove('highlighted');
+                        }
+                    });
+
+                    requestAnimationFrame(animateRoll);
+                } else {
+                    rollingTextContainer.style.transform = `translateY(-${targetScrollPos}px)`;
+                    Array.from(rollingTextContainer.children).forEach((item, index) => {
+                        item.classList.remove('highlighted');
+                        if (index === targetIndex) {
+                            item.classList.add('highlighted');
+                        }
+                    });
+
+                    setTimeout(() => {
+                        animationContainer.style.display = 'none';
+                        gainTextElement.textContent = finalPrize;
+                        resultContainer.style.display = 'block';
+
+                        addRewardToHistory(finalPrize);
+
+                        if (playerName) {
+                            sendDiscordWebhook(`📢 ${playerName} a gagné : ${finalPrize} !`);
+                        } else {
+                            sendDiscordWebhook(`📢 Un joueur anonyme a gagné : ${finalPrize} !`);
+                        }
+                        
+                        setLastGambleTime();
+                        updateCountdown();
+                    }, 500);
+                }
+            }
+
+            requestAnimationFrame(animateRoll);
+        }
+
+        function handleCodeActivation() {
+            const code = codeInput.value.trim().toUpperCase();
+            const usedCodes = getUsedCodes();
+
+            if (availableCodes[code]) {
+                if (usedCodes.includes(code)) {
+                    codeMessage.textContent = "Ce code a déjà été utilisé !";
+                } else {
+                    const codeResult = availableCodes[code].action();
+                    addUsedCode(code);
+                    codeMessage.textContent = codeResult;
+                    codeInput.value = '';
+                }
+            } else {
+                codeMessage.textContent = "Code invalide !";
+            }
+        }
+
+        function showPseudoInput() {
+            modalOverlay.classList.add('active');
+            pseudoInputArea.classList.add('active');
+            rewardsHistoryContainer.classList.remove('active');
+            codesArea.classList.remove('active');
+            pseudoInput.value = '';
+            pseudoMessage.textContent = '';
+            pseudoInput.focus();
+        }
+
+        function savePseudo() {
+            const newPseudo = pseudoInput.value.trim();
+            if (newPseudo.length < 3) {
+                pseudoMessage.textContent = "Le pseudo doit contenir au moins 3 caractères.";
+                return;
+            }
+            if (newPseudo.length > 20) {
+                pseudoMessage.textContent = "Le pseudo ne peut pas dépasser 20 caractères.";
+                return;
+            }
+            playerName = newPseudo;
+            
+            modalOverlay.classList.remove('active');
+            pseudoInputArea.classList.remove('active');
+            
+            mainContainer.style.display = 'block';
+            showCodesButton.style.display = 'block';
+
+            updateCountdown();
+        }
+
+        gambleButton.addEventListener('click', () => {
+            const timeLeft = calculateRemainingTime();
+            if (timeLeft === 0) {
+                gambleButton.disabled = true;
+                resultContainer.style.display = 'none';
+                cooldownContainer.style.display = 'none';
+
+                const randomIndex = Math.floor(Math.random() * prizes.length);
+                const selectedPrize = prizes[randomIndex];
+
+                animationContainer.style.display = 'flex';
+                startRollingAnimation(selectedPrize);
+            }
+        });
+
+        showRewardsButton.addEventListener('click', displayRewardsHistory);
+
+        closeRewardsButton.addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+            rewardsHistoryContainer.classList.remove('active');
+        });
+
+        showCodesButton.addEventListener('click', () => {
+            modalOverlay.classList.add('active');
+            codesArea.classList.add('active');
+            rewardsHistoryContainer.classList.remove('active');
+            pseudoInputArea.classList.remove('active');
+            codeInput.value = '';
+            codeMessage.textContent = '';
+        });
+
+        closeCodesButton.addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+            codesArea.classList.remove('active');
+        });
+
+        activateCodeButton.addEventListener('click', handleCodeActivation);
+        codeInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                handleCodeActivation();
+            }
+        });
+
+        savePseudoButton.addEventListener('click', savePseudo);
+        pseudoInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                savePseudo();
+            }
+        });
+
+        modalOverlay.classList.remove('active');
+        showPseudoInput();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
